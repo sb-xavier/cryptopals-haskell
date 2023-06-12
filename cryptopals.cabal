@@ -26,6 +26,7 @@ library
       Data
       Lib
       Set1.Challenge3
+      Set1.Challenge4
   other-modules:
       Paths_cryptopals
   hs-source-dirs:

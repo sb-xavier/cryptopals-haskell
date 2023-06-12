@@ -1,8 +1,13 @@
-module Set1.Challenge3 (decryptSingleCharXor) where
+module Set1.Challenge3
+  ( decryptSingleCharXor,
+    scoring,
+  )
+where
 
 import Data
 import Data.Char
 import qualified Data.List as L
+import Data.Maybe (fromMaybe)
 
 scoring :: Data -> Int
 scoring input =
@@ -13,19 +18,15 @@ scoring input =
       | i > 96 && i < 123 = i - 32
       | otherwise = i
     score c =
-      case L.elemIndex (toUpperInt c) reference of
-        Just i -> i + 1
-        _ -> 0
+      fromMaybe (-1) $ L.elemIndex (toUpperInt c) reference
 
-decryptSingleCharXor :: String -> (Int, String)
-decryptSingleCharXor hCipher =
+decryptSingleCharXor :: Data -> (Int, Data)
+decryptSingleCharXor cipher =
   ( bestChar,
-    toString $
-      xor cipher $
-        repeatChar (chr bestChar)
+    xor cipher $
+      repeatChar (chr bestChar)
   )
   where
-    cipher = fromHex hCipher
     size = len cipher
     repeatChar c =
       raw $ replicate size c
