@@ -18,8 +18,6 @@ import qualified Data.Bits as Bits
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.UTF8 as BU
-import qualified Foreign as GHC
-import qualified GHC.Word
 import Numeric
 import Test.QuickCheck (Arbitrary, arbitrary)
 
