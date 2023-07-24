@@ -4,6 +4,7 @@ module Set1
 where
 
 import Data
+import Data.Bits (xor)
 import Set1.Challenge3 (decryptSingleCharXor)
 import Set1.Challenge4 (findSingleCharXor)
 import Set1.Challenge5 (encryptRepeatingXor)

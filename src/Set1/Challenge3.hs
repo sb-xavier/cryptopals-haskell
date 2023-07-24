@@ -5,8 +5,9 @@ module Set1.Challenge3
 where
 
 import Data
+import Data.Bits (xor)
 import Data.Char
-import qualified Data.List as L
+import Data.List qualified as L
 import Data.Maybe (fromMaybe)
 
 scoring :: Data -> Int
