@@ -12,6 +12,8 @@ module Data
     len,
     lrotate,
     showBin,
+    hamming,
+    slice,
   )
 where
 
@@ -83,6 +85,12 @@ toString (Data d) = BU.toString d
 
 len :: Data -> Int
 len (Data d) = B.length d
+
+slice :: Int -> Int -> Data -> Data
+slice from to (Data d) =
+  Data $ B.pack $ take (to - from + 1) (drop from xs)
+  where
+    xs = B.unpack d
 
 -- Helpers
 
@@ -179,6 +187,10 @@ instance Data.Bits.Bits Data where
         -- Rotate a word by shifting to the next or previous words,
         -- depending on direction of rotation
         shiftR w i + shiftL next_w (8 - i)
+
+hamming :: Data -> Data -> Int
+hamming d1 d2 =
+  popCount (d1 `xor` d2)
 
 -- Allow QuickCheck testing of Data
 

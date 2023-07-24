@@ -52,6 +52,13 @@ testSelfXor :: Data -> IO ()
 testSelfXor d =
   popCount (xor d d) `shouldBe` 0
 
+testHamming :: IO ()
+testHamming =
+  Data.hamming d1 d2 `shouldBe` 37
+  where
+    d1 = raw "this is a test"
+    d2 = raw "wokka wokka!!!"
+
 tests :: SpecWith ()
 tests = do
   describe "Data type" $ do
@@ -87,3 +94,7 @@ tests = do
   describe "Shift" $ do
     it "Left then right shift" $
       property testShiftPosNeg
+
+  describe "Hamming" $ do
+    it "Example from Cryptopals" $
+      testHamming
