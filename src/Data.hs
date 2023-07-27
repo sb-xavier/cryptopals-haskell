@@ -1,16 +1,18 @@
 module Data
   ( Data,
     arbitrary,
+    every,
     raw,
     fromHex,
     fromHex',
     fromBase64,
+    fromBitString,
     toHex,
     toBase64,
     toBytes,
     toString,
+    toBitString,
     len,
-    lrotate,
     showBin,
     hamming,
     slice,
@@ -26,6 +28,8 @@ import Data.ByteString.UTF8 qualified as BU
 import GHC.Word (Word8)
 import Numeric qualified as N
 import Test.QuickCheck (Arbitrary, arbitrary)
+import Util.List qualified as UL
+import Util.String qualified as US
 
 -- Generic functions to manipulate bytes and bits
 
@@ -35,19 +39,13 @@ instance Show Data where
   show d =
     "Data <" <> toHex d <> ">"
 
-pad :: String -> String
-pad l =
-  if even (length l)
-    then l
-    else '0' : l
-
 raw :: String -> Data
 raw =
   Data . BU.fromString
 
 fromHex :: String -> Data
 fromHex h =
-  Data $ B.pack $ map (toInt . N.readHex) $ pairUp $ pad h
+  Data $ B.pack $ map (toInt . N.readHex) $ pairUp $ US.pad 2 h
   where
     toInt ((v, _) : _) = v
     toInt [] = 0
@@ -57,7 +55,7 @@ fromHex h =
 
 fromHex' :: String -> B.ByteString
 fromHex' h =
-  B.pack $ map (toInt . N.readHex) $ pairUp $ pad h
+  B.pack $ map (toInt . N.readHex) $ pairUp $ US.pad 2 h
   where
     toInt ((v, _) : _) = v
     toInt [] = 0
@@ -67,7 +65,7 @@ fromHex' h =
 
 toHex :: Data -> String
 toHex (Data s) =
-  B.foldl (\acc c -> acc ++ pad (N.showHex c "")) [] s
+  B.foldl (\acc c -> acc ++ US.pad 2 (N.showHex c "")) [] s
 
 fromBase64 :: String -> Either String Data
 fromBase64 h =
@@ -82,6 +80,20 @@ toBytes (Data d) = map fromIntegral $ B.unpack d
 
 toString :: Data -> String
 toString (Data d) = BU.toString d
+
+fromBitString :: String -> Data
+fromBitString s =
+  -- /!\ The bits are interpreted from lowest to highest
+  Data $
+    B.pack $
+      map US.toWord $
+        UL.chunksOf 8 $
+          US.fill 8 s
+
+toBitString :: Data -> String
+toBitString (Data d) =
+  -- /!\ The bits are printed from lowest to highest
+  B.foldl (\acc c -> acc ++ US.fill 8 (reverse $ N.showBin c "")) [] d
 
 len :: Data -> Int
 len (Data d) = B.length d
@@ -102,22 +114,9 @@ applyBitwiseOperation2 :: (Word8 -> Word8 -> Word8) -> Data -> Data -> Data
 applyBitwiseOperation2 operation (Data d1) (Data d2) =
   Data $ B.packZipWith operation d1 d2
 
-lrotate :: [a] -> Int -> [a]
-lrotate xs n
-  | l == 0 = []
-  | n < 0 = lrotate xs (l + (n `mod` l))
-  | n == 0 = xs
-  | otherwise = drop (n `mod` l) xs <> take (n `mod` l) xs
-  where
-    l = length xs
-
 showBin :: Data -> String
-showBin (Data d) =
-  mconcat $ map (padTo8 . (`N.showBin` "")) $ reverse $ B.unpack d
-  where
-    padTo8 s
-      | length s < 8 = replicate (8 - length s) '0' <> s
-      | otherwise = s
+showBin =
+  toBitString
 
 -- Make it a Data.Bits instance, so that we get bit manipulation functions
 
@@ -168,10 +167,10 @@ instance Data.Bits.Bits Data where
   rotateL (Data d) i
     | i == 0 = Data d
     | i < 8 = Data $ B.pack $ zipWith rotateWordsL data_words data_words_shifted
-    | otherwise = rotateL (Data $ B.pack $ lrotate (B.unpack d) (i `div` 8)) (i `mod` 8)
+    | otherwise = rotateL (Data $ B.pack $ UL.rotate (B.unpack d) (i `div` 8)) (i `mod` 8)
     where
       data_words = B.unpack d
-      data_words_shifted = lrotate data_words 1
+      data_words_shifted = UL.rotate data_words 1
       rotateWordsL w prev_w =
         -- Rotate a word by shifting to the next or previous words,
         -- depending on direction of rotation
@@ -179,10 +178,10 @@ instance Data.Bits.Bits Data where
   rotateR (Data d) i
     | i == 0 = Data d
     | i < 8 = Data $ B.pack $ zipWith rotateWordsR data_words data_words_shifted
-    | otherwise = rotateR (Data $ B.pack $ lrotate (B.unpack d) (negate (i `div` 8))) (i `mod` 8)
+    | otherwise = rotateR (Data $ B.pack $ UL.rotate (B.unpack d) (negate (i `div` 8))) (i `mod` 8)
     where
       data_words = B.unpack d
-      data_words_shifted = lrotate data_words (-1)
+      data_words_shifted = UL.rotate data_words (-1)
       rotateWordsR w next_w =
         -- Rotate a word by shifting to the next or previous words,
         -- depending on direction of rotation
@@ -191,6 +190,11 @@ instance Data.Bits.Bits Data where
 hamming :: Data -> Data -> Int
 hamming d1 d2 =
   popCount (d1 `xor` d2)
+
+every :: Int -> Int -> Data -> Data
+every offset n d =
+  -- Get every n-th bit, starting at offset
+  fromBitString $ UL.every offset n $ toBitString d
 
 -- Allow QuickCheck testing of Data
 

@@ -5,9 +5,11 @@ where
 
 import Data
 import Data.Bits (xor)
+import Data.Either (fromRight)
 import Set1.Challenge3 (decryptSingleCharXor)
 import Set1.Challenge4 (findSingleCharXor)
 import Set1.Challenge5 (encryptRepeatingXor)
+import Set1.Challenge6 (RepeatingXorParameters, decryptRepeatingXor, defaultParams)
 import Test.Hspec
 
 challenge1 :: IO ()
@@ -45,6 +47,21 @@ challenge5 =
     clear = raw "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
     cipher = fromHex "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"
 
+challenge6 :: IO ()
+challenge6 =
+  do
+    inputs <- readFile "data/6.txt"
+    ( decryptRepeatingXor
+        params
+        (fromRight fallback $ fromBase64 $ concat $ lines inputs)
+      )
+      `shouldBe` (key, clear)
+  where
+    params = defaultParams
+    key = raw "abc"
+    clear = raw "abc"
+    fallback = raw "abc"
+
 tests :: SpecWith ()
 tests = do
   describe "Set 1" $ do
@@ -62,3 +79,6 @@ tests = do
 
     it "Challenge 5" $ do
       challenge5
+
+    it "Challenge 6" $ do
+      challenge6

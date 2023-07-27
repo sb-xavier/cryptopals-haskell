@@ -14,6 +14,10 @@ testBase64 :: Data -> IO ()
 testBase64 s =
   (Data.fromBase64 . Data.toBase64 $ s) `shouldBe` Right s
 
+testBin :: Data -> IO ()
+testBin s =
+  (Data.fromBitString . Data.toBitString $ s) `shouldBe` s
+
 testRotatePosNeg :: Int -> Data -> IO ()
 testRotatePosNeg i d =
   rotate (rotate d i) (negate i) `shouldBe` d
@@ -40,14 +44,6 @@ testSubwordRotation d = do
   rotate (rotate d 6) (-6) `shouldBe` d
   rotate (rotate d 7) (-7) `shouldBe` d
 
-testRotationExamples :: IO ()
-testRotationExamples = do
-  showBin (rotate (fromHex "ff0") 0) `shouldBe` "1111000000001111"
-  showBin (rotate (fromHex "ff0") 6) `shouldBe` "0000001111111100"
-  showBin (rotateL (fromHex "ff0") 6) `shouldBe` "0000001111111100"
-  showBin (rotateR (fromHex "ff0") 6) `shouldBe` "0011111111000000"
-  showBin (rotateR (fromHex "ff0") 9) `shouldBe` "0000011111111000"
-
 testSelfXor :: Data -> IO ()
 testSelfXor d =
   popCount (xor d d) `shouldBe` 0
@@ -58,6 +54,10 @@ testHamming =
   where
     d1 = raw "this is a test"
     d2 = raw "wokka wokka!!!"
+
+testEvery :: IO ()
+testEvery =
+  (Data.every 3 2 $ Data.fromBitString "000101010101") `shouldBe` Data.fromBitString "11111"
 
 tests :: SpecWith ()
 tests = do
@@ -70,13 +70,13 @@ tests = do
       it "Base64 encoding" $
         property testBase64
 
+    modifyMaxSuccess (const 1000) $
+      it "Binary encoding" $
+        property testBin
+
     describe "Bitwise operations" $ do
       it "Sub-word rotations" $
         property testSubwordRotation
-
-      it
-        "Rotation examples"
-        testRotationExamples
 
       it "Xor with self" $
         property testSelfXor
@@ -98,3 +98,7 @@ tests = do
   describe "Hamming" $ do
     it "Example from Cryptopals" $
       testHamming
+
+  describe "Every" $ do
+    it "Example of 'every'" $
+      testEvery

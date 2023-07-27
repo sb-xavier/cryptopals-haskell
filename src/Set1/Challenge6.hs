@@ -1,20 +1,22 @@
-module Set1.Challenge6 (decryptRepeatingXor) where
+module Set1.Challenge6 (RepeatingXorParameters (..), decryptRepeatingXor, defaultParams) where
 
 import Data
+import Data.Char (chr)
 import Data.Function (on, (&))
 import GHC.Exts (sortWith)
-import Set1.Challenge3 (scoring)
+import Set1.Challenge3 (decryptSingleCharXor, scoring)
+import Util.List qualified as UL
 
 data RepeatingXorParameters = RepeatingXorParameters
-  { maxsize :: Int,
-    minsize :: Int,
+  { minsize :: Int,
+    maxsize :: Int,
     initialDepth :: Int,
     candidates :: Int
   }
   deriving (Eq, Show)
 
-every _ [] = []
-every n xs = head xs : every n (drop n xs)
+defaultParams :: RepeatingXorParameters
+defaultParams = RepeatingXorParameters {minsize = 1, maxsize = 8, initialDepth = 4, candidates = 2}
 
 decryptRepeatingXor :: RepeatingXorParameters -> Data -> (Data, Data)
 decryptRepeatingXor params cipher =
@@ -35,7 +37,16 @@ decryptRepeatingXor params cipher =
             )
         )
         depth
+    decryptWithKeySize :: Data -> Int -> (Data, Data)
     decryptWithKeySize c keysize =
       [0 .. (keysize - 1)]
-        & map (\offset -> [])
+        & map (decryptSingleCharXor . (\offset -> Data.every offset keysize c))
+        & foldr
+          (\(k, d) (acc_key, acc_clear) -> (chr k : acc_key, toBitString d <> acc_clear))
+          ([], [])
+        & ( \(key, bits) ->
+              ( raw key,
+                fromBitString $ concatMap (\offset -> UL.every offset keysize bits) [0 .. keysize - 1]
+              )
+          )
     fdiv = (/) `on` fromIntegral
