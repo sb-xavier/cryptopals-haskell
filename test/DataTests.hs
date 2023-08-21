@@ -57,7 +57,7 @@ testHamming =
 
 testEvery :: IO ()
 testEvery =
-  (Data.every 3 2 $ Data.fromBitString "000101010101") `shouldBe` Data.fromBitString "11111"
+  Data.every 3 2 (Data.fromHex "000000ff00ff00ff") `shouldBe` Data.fromHex "ffffff"
 
 tests :: SpecWith ()
 tests = do
@@ -96,9 +96,11 @@ tests = do
       property testShiftPosNeg
 
   describe "Hamming" $ do
-    it "Example from Cryptopals" $
+    it
+      "Example from Cryptopals"
       testHamming
 
   describe "Every" $ do
-    it "Example of 'every'" $
+    it
+      "Example of 'every'"
       testEvery

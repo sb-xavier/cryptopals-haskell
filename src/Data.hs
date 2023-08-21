@@ -39,6 +39,12 @@ instance Show Data where
   show d =
     "Data <" <> toHex d <> ">"
 
+instance Semigroup Data where
+  (<>) (Data a) (Data b) = Data (a <> b)
+
+instance Monoid Data where
+  mempty = Data B.empty
+
 raw :: String -> Data
 raw =
   Data . BU.fromString
@@ -192,9 +198,9 @@ hamming d1 d2 =
   popCount (d1 `xor` d2)
 
 every :: Int -> Int -> Data -> Data
-every offset n d =
-  -- Get every n-th bit, starting at offset
-  fromBitString $ UL.every offset n $ toBitString d
+every offset n (Data d) =
+  -- Get every n-th byte, starting at offset
+  Data $ B.pack $ UL.every offset n $ B.unpack d
 
 -- Allow QuickCheck testing of Data
 

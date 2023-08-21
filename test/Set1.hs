@@ -9,7 +9,7 @@ import Data.Either (fromRight)
 import Set1.Challenge3 (decryptSingleCharXor)
 import Set1.Challenge4 (findSingleCharXor)
 import Set1.Challenge5 (encryptRepeatingXor)
-import Set1.Challenge6 (RepeatingXorParameters, decryptRepeatingXor, defaultParams)
+import Set1.Challenge6 (decryptRepeatingXor, defaultParams)
 import Test.Hspec
 
 challenge1 :: IO ()
@@ -51,15 +51,14 @@ challenge6 :: IO ()
 challenge6 =
   do
     inputs <- readFile "data/6.txt"
-    ( decryptRepeatingXor
-        params
-        (fromRight fallback $ fromBase64 $ concat $ lines inputs)
-      )
-      `shouldBe` (key, clear)
+    solution <- readFile "data/6.solution"
+    decryptRepeatingXor
+      params
+      (fromRight fallback $ fromBase64 $ concat $ lines inputs)
+      `shouldBe` (key, raw solution)
   where
     params = defaultParams
-    key = raw "abc"
-    clear = raw "abc"
+    key = raw "Terminator X: Bring the noise"
     fallback = raw "abc"
 
 tests :: SpecWith ()
